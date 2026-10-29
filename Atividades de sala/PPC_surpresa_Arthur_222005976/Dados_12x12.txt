@@ -1,0 +1,2 @@
+Nº de Interação total	Nº do erro final	Temperatura do nó central para n=10	Valor de Rij
+155	9.425409025709541e-06	36.99994098664836	119.26923555079054
