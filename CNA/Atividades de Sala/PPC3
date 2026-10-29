@@ -1,0 +1,101 @@
+## Gauss-Seidal 
+
+
+import numpy as np
+import pandas as pd
+
+
+def gauss_seidel(A, b, x0=None, tol=1e-6, intmax=100):
+    """
+    Resolve A*x = b pelo método de Gauss-Seidel.
+
+    A    : matriz dos coeficientes
+    b    : vetor dos termos independentes
+    x0   : estimativa inicial
+    tol  : tolerância
+    intmax: máximo de iterações
+
+    Retorna:
+        solução aproximada, histórico e status.
+    """
+
+    A = np.array(A, dtype=float)
+    b = np.array(b, dtype=float)
+
+    n = len(b)
+
+    if A.shape != (n, n):
+        raise ValueError("A matriz A deve ser quadrada e compatível com b.")
+
+    if np.any(np.abs(np.diag(A)) < 1e-14):
+        raise ValueError("A diagonal contém zero ou valor muito pequeno.")
+
+    # Inicializa a solução
+    if x0 is None:
+        x = np.zeros(n)
+    else:
+        x = np.array(x0, dtype=float)
+
+    if x.shape != (n,):
+        raise ValueError("x0 deve ter o mesmo número de incógnitas.")
+
+    historico = []
+
+    for it in range(1, intmax + 1):
+
+        # Guarda a solução anterior para calcular o erro
+        x_anterior = x.copy()
+
+        # Calcula uma incógnita por vez
+        for i in range(n):
+
+            soma = 0.0
+
+            for j in range(n):
+                if j != i:
+                    soma += A[i, j] * x[j]
+
+            # Usa valores novos para j < i
+            # e valores antigos para j > i
+            x[i] = (b[i] - soma) / A[i, i]
+
+        # Erro entre duas iterações
+        erro = np.linalg.norm(x - x_anterior, ord=np.inf)
+
+        # Resíduo: verifica quanto Ax se aproxima de b
+        residuo = np.linalg.norm(A @ x - b, ord=np.inf)
+
+        linha = {
+            "iteracao": it,
+            "erro": erro,
+            "residuo": residuo
+        }
+
+        # Armazena cada incógnita
+        for i in range(n):
+            linha[f"x{i+1}"] = x[i]
+
+        historico.append(linha)
+
+        if erro < tol and residuo < tol:
+            return x, pd.DataFrame(historico), "Convergência atingida."
+
+    return x, pd.DataFrame(historico), "Máximo de iterações atingido."
+
+
+# Exemplo de sistema linear
+A = [
+    [10, -1, 2],
+    [-1, 11, -1],
+    [2, -1, 10]
+]
+
+b = [6, 22, -10]
+
+solucao, dados, status = gauss_seidel(A, b)
+
+print("Status:", status)
+print("Solução:", solucao)
+print(dados)
+
+dados.to_csv("resultados_Gauss_Seidel.csv", index=False)
